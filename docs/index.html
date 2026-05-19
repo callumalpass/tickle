@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Tickle is a tiny local job daemon for YAML commands, script-gated triggers, and JSONL run history."
+    />
+    <title>Tickle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" aria-label="Primary">
+      <a class="brand" href="#top" aria-label="Tickle home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Tickle</span>
+      </a>
+      <nav class="nav-links" aria-label="Site">
+        <a href="#loop">Workflow</a>
+        <a href="#jobs">Jobs</a>
+        <a href="#skill">Skill</a>
+        <a href="https://github.com/callumalpass/tickle">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="hero-stage" aria-hidden="true">
+          <div class="agent-flow" data-flow>
+            <div class="flow-node flow-node-agent" data-flow-node="0">
+              <span class="node-label">agent</span>
+              <pre>create job
+validate yaml
+install service</pre>
+            </div>
+            <div class="flow-node flow-node-yaml" data-flow-node="1">
+              <span class="node-label">job.yaml</span>
+              <pre>trigger:
+  type: script
+  schedule: "*/15 * * * *"</pre>
+            </div>
+            <div class="flow-node flow-node-check" data-flow-node="2">
+              <span class="node-label">check</span>
+              <pre>{"run": true,
+ "event_id": "issue-123"}</pre>
+            </div>
+            <div class="flow-node flow-node-run" data-flow-node="3">
+              <span class="node-label">daemon</span>
+              <pre>tickle run repo-maintenance
+exit 0</pre>
+            </div>
+            <div class="flow-node flow-node-history" data-flow-node="4">
+              <span class="node-label">history.jsonl</span>
+              <pre>{"status":"success",
+ "trigger":"script"}</pre>
+            </div>
+            <span class="flow-pulse pulse-a"></span>
+            <span class="flow-pulse pulse-b"></span>
+          </div>
+        </div>
+
+        <div class="hero-copy">
+          <p class="eyebrow">Local command scheduling from YAML files</p>
+          <h1 id="hero-title">Tickle</h1>
+          <p class="hero-text">
+            Tickle runs commands from local job files. A scheduled check can
+            decide whether there is work to do before the job starts, and each
+            run is recorded as files on disk.
+          </p>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button primary" href="https://github.com/callumalpass/tickle">
+              <span aria-hidden="true">↗</span>
+              GitHub
+            </a>
+            <a class="button secondary" href="#jobs">
+              <span aria-hidden="true">⌄</span>
+              View example
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="loop-section" id="loop" aria-labelledby="loop-title">
+        <div class="section-kicker">Workflow</div>
+        <h2 id="loop-title">A job file describes the schedule, the check, and the command.</h2>
+        <div class="loop-track" data-loop-track>
+          <article class="loop-step">
+            <span class="step-index">01</span>
+            <h3>Write YAML</h3>
+            <p>Define the trigger and command in a file that can be reviewed.</p>
+          </article>
+          <article class="loop-step">
+            <span class="step-index">02</span>
+            <h3>Check for work</h3>
+            <p>The check script exits `0` when the scheduled job should run.</p>
+          </article>
+          <article class="loop-step">
+            <span class="step-index">03</span>
+            <h3>Run locally</h3>
+            <p>The user-level daemon starts the command in the configured directory.</p>
+          </article>
+          <article class="loop-step">
+            <span class="step-index">04</span>
+            <h3>Record the run</h3>
+            <p>Tickle writes JSONL history, stdout, stderr, and trigger details.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="job-section" id="jobs" aria-labelledby="jobs-title">
+        <div class="job-copy">
+          <div class="section-kicker">Job file</div>
+          <h2 id="jobs-title">Use cron for timing, and a script when the job depends on state.</h2>
+          <p>
+            The scheduler only needs a simple contract from the check script:
+            exit `0` to run, exit `1` to skip, or print JSON to pass a reason,
+            event id, and payload into the command.
+          </p>
+        </div>
+        <div class="code-window" aria-label="Example Tickle job">
+          <div class="window-top">
+            <span></span>
+            <span></span>
+            <span></span>
+            <strong>repo-maintenance.yaml</strong>
+          </div>
+          <pre><code>version: 1
+id: repo-maintenance
+name: Repo Maintenance
+status: active
+
+triggers:
+  - type: script
+    schedule: "*/15 * * * *"
+    command: ["./checks/has-work.sh"]
+    timeout: 30s
+
+run:
+  cwd: /path/to/project
+  command: ["./run-agent-job.sh"]
+  timeout: 2h
+
+env:
+  AGENT_MEMORY: ./memory.md</code></pre>
+        </div>
+      </section>
+
+      <section class="skill-section" id="skill" aria-labelledby="skill-title">
+        <div class="section-kicker">Skill bundles</div>
+        <h2 id="skill-title">The skill bundle includes the binary and job templates.</h2>
+        <div class="bundle-row">
+          <div class="bundle-copy">
+            <p>
+              Releases include standalone binaries and platform-specific skill
+              zips. The skill gives a coding agent the command wrapper and
+              templates it needs to create and validate jobs.
+            </p>
+            <a class="text-link" href="https://github.com/callumalpass/tickle/releases">
+              Releases
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <ul class="artifact-list" aria-label="Release artifacts">
+            <li><span>linux</span><strong>amd64</strong></li>
+            <li><span>linux</span><strong>arm64</strong></li>
+            <li><span>darwin</span><strong>arm64</strong></li>
+            <li><span>windows</span><strong>amd64</strong></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Tickle</span>
+      <a href="https://github.com/callumalpass/tickle">github.com/callumalpass/tickle</a>
+    </footer>
+
+    <script src="./main.js"></script>
+  </body>
+</html>

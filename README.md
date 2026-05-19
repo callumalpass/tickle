@@ -34,8 +34,8 @@ You can override these paths with `TICKLE_CONFIG_HOME` and `TICKLE_DATA_HOME`.
 
 ## Skill
 
-The repo includes a Codex skill at `skills/tickle`. The skill teaches agents how
-to create, validate, install, run, and inspect Tickle jobs.
+The repo includes a coding-agent skill at `skills/tickle`. The skill teaches
+agents how to create, validate, install, run, and inspect Tickle jobs.
 
 Release builds publish platform-specific skill zips:
 
@@ -54,19 +54,19 @@ scripts, and the matching platform binary under `scripts/bin/`.
 
 ```yaml
 version: 1
-id: tasknotes-ops
-name: TaskNotes Ops
+id: repo-maintenance
+name: Repo Maintenance
 status: active
 
 triggers:
   - type: script
     schedule: "*/15 * * * *"
-    command: ["./checks/has-new-issues.sh"]
+    command: ["./checks/has-work.sh"]
     timeout: 30s
 
 run:
-  cwd: /home/calluma/projects/tasknotes
-  command: ["codex", "exec", "--prompt-file", "./prompt.md"]
+  cwd: /path/to/project
+  command: ["./run-agent-job.sh"]
   timeout: 2h
 
 env:
@@ -91,7 +91,7 @@ Script trigger contract:
 Example stdout:
 
 ```json
-{"run":true,"reason":"3 new issues","event_id":"github:tasknotes:1898","payload":{"issues":[1898]}}
+{"run":true,"reason":"3 new issues","event_id":"github:repo:1898","payload":{"issues":[1898]}}
 ```
 
 ## CLI
