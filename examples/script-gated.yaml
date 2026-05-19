@@ -1,0 +1,18 @@
+version: 1
+id: script-gated-demo
+name: Script Gated Demo
+status: active
+
+triggers:
+  - type: script
+    every: 1m
+    cwd: ..
+    command: ["./checks/always-run.sh"]
+    timeout: 10s
+
+run:
+  command: ["sh", "-c", "echo tickle demo run at $(date -u +%Y-%m-%dT%H:%M:%SZ)"]
+  timeout: 1m
+
+env:
+  TICKLE_DEMO: "1"

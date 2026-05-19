@@ -1,0 +1,12 @@
+version: 1
+id: cron-demo
+name: Cron Demo
+status: active
+
+trigger:
+  type: cron
+  schedule: "*/30 * * * *"
+
+run:
+  command: ["sh", "-c", "echo cron demo run"]
+  timeout: 1m
