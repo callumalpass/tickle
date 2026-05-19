@@ -39,7 +39,7 @@
             <div class="flow-node flow-node-agent" data-flow-node="0">
               <span class="node-label">agent</span>
               <pre>create job
-validate yaml
+write scripts
 install service</pre>
             </div>
             <div class="flow-node flow-node-yaml" data-flow-node="1">
@@ -123,7 +123,8 @@ exit 0</pre>
           <p>
             The scheduler only needs a simple contract from the check script:
             exit `0` to run, exit `1` to skip, or print JSON to pass a reason,
-            event id, and payload into the command.
+            event id, and payload into the command. User-owned scripts usually
+            live under the Tickle config directory.
           </p>
         </div>
         <div class="code-window" aria-label="Example Tickle job">
@@ -141,16 +142,16 @@ status: active
 triggers:
   - type: script
     schedule: "*/15 * * * *"
-    command: ["./checks/has-work.sh"]
+    command: ["@config/scripts/repo-maintenance/has-work.sh"]
     timeout: 30s
 
 run:
   cwd: /path/to/project
-  command: ["./run-agent-job.sh"]
+  command: ["@config/scripts/repo-maintenance/run-agent-job.sh"]
   timeout: 2h
 
 env:
-  AGENT_MEMORY: ./memory.md</code></pre>
+  AGENT_MEMORY: "@config/scripts/repo-maintenance/memory.md"</code></pre>
         </div>
       </section>
 

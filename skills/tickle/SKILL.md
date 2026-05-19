@@ -9,10 +9,10 @@ Use Tickle for local command automations that should be easy for agents and huma
 
 ## Locate the CLI
 
-Prefer the bundled skill wrapper when this skill is installed:
+Prefer the bundled skill wrapper from the installed skill folder:
 
 ```bash
-~/.codex/skills/tickle/scripts/tickle
+<skills-dir>/tickle/scripts/tickle
 ```
 
 If that path is not present, use `tickle` from `PATH`, or build it from the repo:
@@ -23,12 +23,14 @@ go build -o tickle ./cmd/tickle
 
 ## Basic Workflow
 
-1. Create or edit a job YAML file under the user's Tickle jobs directory.
-2. Run `tickle validate <job-file-or-id>`.
-3. For script-gated jobs, run `tickle check <job-file-or-id>`.
-4. Run `tickle run <job-file-or-id>` for a manual smoke test when safe.
-5. Use `tickle service install` and `tickle service start` when the user wants a background daemon.
-6. Inspect `tickle status` and `tickle logs <job-id>` after setup or failures.
+1. Run `tickle init` if the config/data directories do not exist.
+2. Create or edit a job YAML file under the user's Tickle jobs directory.
+3. Put user-owned job scripts under `@config/scripts/<job-id>/`.
+4. Run `tickle validate <job-file-or-id>`.
+5. For script-gated jobs, run `tickle check <job-file-or-id>`.
+6. Run `tickle run <job-file-or-id>` for a manual smoke test when safe.
+7. Use `tickle service install` and `tickle service start` when the user wants a background daemon.
+8. Inspect `tickle status` and `tickle logs <job-id>` after setup or failures.
 
 Default job directories:
 
@@ -44,14 +46,39 @@ Default data directories:
 
 `TICKLE_CONFIG_HOME` and `TICKLE_DATA_HOME` override these locations.
 
+Default user-level layout:
+
+```text
+<config>/
+  jobs/
+  scripts/
+    <job-id>/
+  templates/
+
+<data>/
+  state/
+  runs/
+  logs/
+  bin/
+```
+
+Use the config directory for job definitions, scripts, prompts, memory files,
+and other hand-authored inputs. Use the data directory only for generated state,
+history, logs, binaries, and run artifacts.
+
 ## Job Patterns
 
 Use array commands by default. Avoid shell strings unless shell features are required.
 
 ```yaml
 run:
-  command: ["codex", "exec", "--prompt-file", "./prompt.md"]
+  command: ["@config/scripts/my-job/run.sh"]
 ```
+
+Tickle expands `@config/` and `@data/` in command arguments, working
+directories, and environment values. Prefer `@config/scripts/<job-id>/...` for
+user-owned automations. Use repo-relative paths only when the automation is
+owned by that repository and the scripts should be committed there.
 
 Use `script` triggers when a condition should be checked on a schedule before running the job:
 
@@ -59,7 +86,7 @@ Use `script` triggers when a condition should be checked on a schedule before ru
 triggers:
   - type: script
     schedule: "*/15 * * * *"
-    command: ["./checks/should-run.sh"]
+    command: ["@config/scripts/my-job/should-run.sh"]
     timeout: 30s
 ```
 
@@ -84,7 +111,7 @@ Copy from `templates/` when creating new jobs:
 
 - `command.yaml`: ordinary scheduled command job.
 - `script-gated.yaml`: check script controls whether the job runs.
-- `codex-agent.yaml`: Codex job using prompt and memory files.
+- `agent-job.yaml`: agent job using prompt and memory files.
 
 After copying a template, update `id`, `name`, paths, commands, schedule, and timeout before validation.
 

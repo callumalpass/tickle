@@ -6,10 +6,10 @@ status: active
 triggers:
   - type: script
     schedule: "*/15 * * * *"
-    command: ["./checks/should-run.sh"]
+    command: ["@config/scripts/my-script-gated-job/should-run.sh"]
     timeout: 30s
 
 run:
   cwd: /path/to/project
-  command: ["./run-job.sh"]
+  command: ["@config/scripts/my-script-gated-job/run-job.sh"]
   timeout: 30m

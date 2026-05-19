@@ -9,5 +9,5 @@ trigger:
 
 run:
   cwd: /path/to/project
-  command: ["sh", "-c", "echo hello from tickle"]
+  command: ["@config/scripts/my-command-job/run.sh"]
   timeout: 10m

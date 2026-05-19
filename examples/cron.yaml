@@ -8,5 +8,5 @@ trigger:
   schedule: "*/30 * * * *"
 
 run:
-  command: ["sh", "-c", "echo cron demo run"]
+  command: ["@config/scripts/cron-demo/run.sh"]
   timeout: 1m

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const AppName = "tickle"
@@ -79,6 +80,22 @@ func JobsDir() (string, error) {
 	return filepath.Join(base, "jobs"), nil
 }
 
+func ScriptsDir() (string, error) {
+	base, err := ConfigHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(base, "scripts"), nil
+}
+
+func TemplatesDir() (string, error) {
+	base, err := ConfigHome()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(base, "templates"), nil
+}
+
 func StateDir() (string, error) {
 	base, err := DataHome()
 	if err != nil {
@@ -124,8 +141,8 @@ func StableBinaryPath() (string, error) {
 }
 
 func EnsureBaseDirs() error {
-	dirs := make([]string, 0, 5)
-	for _, fn := range []func() (string, error){JobsDir, StateDir, RunsDir, LogsDir, BinDir} {
+	dirs := make([]string, 0, 7)
+	for _, fn := range []func() (string, error){JobsDir, ScriptsDir, TemplatesDir, StateDir, RunsDir, LogsDir, BinDir} {
 		dir, err := fn()
 		if err != nil {
 			return err
@@ -138,6 +155,50 @@ func EnsureBaseDirs() error {
 		}
 	}
 	return nil
+}
+
+func HasPathToken(value string) bool {
+	return value == "@config" ||
+		value == "@data" ||
+		strings.HasPrefix(value, "@config/") ||
+		strings.HasPrefix(value, "@data/") ||
+		strings.HasPrefix(value, `@config\`) ||
+		strings.HasPrefix(value, `@data\`)
+}
+
+func ExpandPathToken(value string) (string, error) {
+	switch {
+	case value == "@config":
+		return ConfigHome()
+	case value == "@data":
+		return DataHome()
+	case strings.HasPrefix(value, "@config/"):
+		base, err := ConfigHome()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(base, filepath.FromSlash(strings.TrimPrefix(value, "@config/"))), nil
+	case strings.HasPrefix(value, "@data/"):
+		base, err := DataHome()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(base, filepath.FromSlash(strings.TrimPrefix(value, "@data/"))), nil
+	case strings.HasPrefix(value, `@config\`):
+		base, err := ConfigHome()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(base, strings.TrimPrefix(value, `@config\`)), nil
+	case strings.HasPrefix(value, `@data\`):
+		base, err := DataHome()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(base, strings.TrimPrefix(value, `@data\`)), nil
+	default:
+		return value, nil
+	}
 }
 
 func ExistingFile(path string) (bool, error) {

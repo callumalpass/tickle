@@ -1,0 +1,19 @@
+version: 1
+id: my-agent-job
+name: My Agent Job
+status: active
+
+triggers:
+  - type: script
+    schedule: "*/30 * * * *"
+    command: ["@config/scripts/my-agent-job/has-work.sh"]
+    timeout: 30s
+
+run:
+  cwd: /path/to/project
+  command: ["@config/scripts/my-agent-job/run-agent-job.sh"]
+  timeout: 2h
+
+env:
+  AGENT_PROMPT: "@config/scripts/my-agent-job/prompt.md"
+  AGENT_MEMORY: "@config/scripts/my-agent-job/memory.md"

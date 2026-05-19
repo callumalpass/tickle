@@ -110,6 +110,20 @@ func cmdInit(args []string) error {
 		}
 		fmt.Println("created", examplePath)
 	}
+	scriptsDir, err := paths.ScriptsDir()
+	if err != nil {
+		return err
+	}
+	exampleScript := filepath.Join(scriptsDir, "example", "run.sh")
+	if _, err := os.Stat(exampleScript); errors.Is(err, os.ErrNotExist) {
+		if err := os.MkdirAll(filepath.Dir(exampleScript), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(exampleScript, []byte(exampleScriptSH), 0o755); err != nil {
+			return err
+		}
+		fmt.Println("created", exampleScript)
+	}
 	configHome, _ := paths.ConfigHome()
 	dataHome, _ := paths.DataHome()
 	fmt.Println("config:", configHome)
@@ -399,6 +413,12 @@ trigger:
   every: 10m
 
 run:
-  command: ["sh", "-c", "echo tickle example"]
+  command: ["@config/scripts/example/run.sh"]
   timeout: 1m
+`
+
+const exampleScriptSH = `#!/usr/bin/env sh
+set -eu
+
+echo "tickle example"
 `

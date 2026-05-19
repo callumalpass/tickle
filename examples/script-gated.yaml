@@ -6,12 +6,11 @@ status: active
 triggers:
   - type: script
     every: 1m
-    cwd: ..
-    command: ["./checks/always-run.sh"]
+    command: ["@config/scripts/script-gated-demo/always-run.sh"]
     timeout: 10s
 
 run:
-  command: ["sh", "-c", "echo tickle demo run at $(date -u +%Y-%m-%dT%H:%M:%SZ)"]
+  command: ["@config/scripts/script-gated-demo/run.sh"]
   timeout: 1m
 
 env:

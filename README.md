@@ -13,8 +13,8 @@ a run journal that is easy to inspect with normal shell tools.
 ```bash
 go build -o tickle ./cmd/tickle
 ./tickle init
-./tickle validate examples/script-gated.yaml
-./tickle run examples/script-gated.yaml
+./tickle validate example
+./tickle run example
 ./tickle daemon
 ```
 
@@ -31,6 +31,30 @@ Run data is written as JSON and JSONL under the platform data directory:
 - Windows: `%LOCALAPPDATA%\Tickle`
 
 You can override these paths with `TICKLE_CONFIG_HOME` and `TICKLE_DATA_HOME`.
+
+`tickle init` creates this user-level layout:
+
+```text
+<config>/
+  jobs/
+  scripts/
+  templates/
+
+<data>/
+  state/
+  runs/
+  logs/
+  bin/
+```
+
+For user-owned automations, put scripts under
+`@config/scripts/<job-id>/` and reference them from job files with the
+`@config/` token. Tickle expands `@config/` and `@data/` in command
+arguments, working directories, and environment values before starting a
+process.
+
+Repo-local scripts still work when the automation belongs to a project and the
+scripts should be committed with that project.
 
 ## Skill
 
@@ -61,16 +85,16 @@ status: active
 triggers:
   - type: script
     schedule: "*/15 * * * *"
-    command: ["./checks/has-work.sh"]
+    command: ["@config/scripts/repo-maintenance/has-work.sh"]
     timeout: 30s
 
 run:
   cwd: /path/to/project
-  command: ["./run-agent-job.sh"]
+  command: ["@config/scripts/repo-maintenance/run-agent-job.sh"]
   timeout: 2h
 
 env:
-  AGENT_MEMORY: ./memory.md
+  AGENT_MEMORY: "@config/scripts/repo-maintenance/memory.md"
 ```
 
 The native trigger types are:

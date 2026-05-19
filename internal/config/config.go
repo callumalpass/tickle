@@ -266,7 +266,7 @@ func (j *Job) TriggerCWD(trigger Trigger) string {
 }
 
 func resolveRelative(base, value string) string {
-	if value == "" || filepath.IsAbs(value) {
+	if value == "" || filepath.IsAbs(value) || paths.HasPathToken(value) {
 		return value
 	}
 	return filepath.Clean(filepath.Join(base, value))

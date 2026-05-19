@@ -69,6 +69,33 @@ run:
 	}
 }
 
+func TestTokenCWDIsNotResolvedRelativeToJobFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "job.yaml")
+	writeFile(t, path, `version: 1
+id: demo
+run:
+  cwd: "@config/work"
+  command: ["echo", "hello"]
+trigger:
+  type: script
+  every: 1m
+  cwd: "@data/checks"
+  command: ["echo", "check"]
+`)
+
+	job, err := LoadJob(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := job.RunCWD(); got != "@config/work" {
+		t.Fatalf("RunCWD = %q", got)
+	}
+	if got := job.TriggerCWD(job.Triggers[0]); got != "@data/checks" {
+		t.Fatalf("TriggerCWD = %q", got)
+	}
+}
+
 func writeFile(t *testing.T, path, text string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {

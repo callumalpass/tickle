@@ -94,6 +94,10 @@ func EvaluateScriptTrigger(ctx context.Context, job *config.Job, trigger config.
 		return CheckResult{}, err
 	}
 	env = mergeEnv(env, trigger.Env)
+	env, err = expandEnvValues(env)
+	if err != nil {
+		return CheckResult{}, err
+	}
 
 	timeout := 30 * time.Second
 	if trigger.Timeout != "" {
@@ -110,7 +114,16 @@ func EvaluateScriptTrigger(ctx context.Context, job *config.Job, trigger config.
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	exitCode, execErr := execute(ctx, trigger.Command, job.TriggerCWD(trigger), envList(env), &stdout, &stderr)
+	command, err := expandCommand(trigger.Command)
+	if err != nil {
+		return CheckResult{}, err
+	}
+	cwd, err := paths.ExpandPathToken(job.TriggerCWD(trigger))
+	if err != nil {
+		return CheckResult{}, err
+	}
+
+	exitCode, execErr := execute(ctx, command, cwd, envList(env), &stdout, &stderr)
 	result := CheckResult{
 		JobID:     job.ID,
 		Trigger:   "script",
@@ -220,6 +233,10 @@ func RunJob(ctx context.Context, job *config.Job, event TriggerEvent) (RunResult
 		return RunResult{}, err
 	}
 	env = mergeEnv(env, job.Run.Env)
+	env, err = expandEnvValues(env)
+	if err != nil {
+		return RunResult{}, err
+	}
 
 	if job.Run.Timeout != "" {
 		timeout, err := time.ParseDuration(job.Run.Timeout)
@@ -231,7 +248,16 @@ func RunJob(ctx context.Context, job *config.Job, event TriggerEvent) (RunResult
 		defer cancel()
 	}
 
-	exitCode, execErr := execute(ctx, job.Run.Command, job.RunCWD(), envList(env), stdout, stderr)
+	command, err := expandCommand(job.Run.Command)
+	if err != nil {
+		return RunResult{}, err
+	}
+	cwd, err := paths.ExpandPathToken(job.RunCWD())
+	if err != nil {
+		return RunResult{}, err
+	}
+
+	exitCode, execErr := execute(ctx, command, cwd, envList(env), stdout, stderr)
 	endedAt := time.Now().Format(time.RFC3339)
 
 	result := RunResult{
@@ -416,6 +442,14 @@ func commandEnv(job *config.Job, state State, extra map[string]string) (map[stri
 	if err != nil {
 		return nil, err
 	}
+	scriptsDir, err := paths.ScriptsDir()
+	if err != nil {
+		return nil, err
+	}
+	templatesDir, err := paths.TemplatesDir()
+	if err != nil {
+		return nil, err
+	}
 	sp, err := statePath(job.ID)
 	if err != nil {
 		return nil, err
@@ -431,6 +465,8 @@ func commandEnv(job *config.Job, state State, extra map[string]string) (map[stri
 	env["TICKLE_STATE_DIR"] = stateDir
 	env["TICKLE_STATE_FILE"] = sp
 	env["TICKLE_RUNS_DIR"] = runsDir
+	env["TICKLE_SCRIPTS_DIR"] = scriptsDir
+	env["TICKLE_TEMPLATES_DIR"] = templatesDir
 	env["TICKLE_LAST_CHECK_AT"] = state.LastCheckAt
 	env["TICKLE_LAST_RUN_AT"] = state.LastRunAt
 	env["TICKLE_LAST_SUCCESS_AT"] = state.LastSuccessAt
@@ -438,6 +474,30 @@ func commandEnv(job *config.Job, state State, extra map[string]string) (map[stri
 	env["TICKLE_LAST_EVENT_ID"] = state.LastEventID
 	env = mergeEnv(env, extra)
 	return env, nil
+}
+
+func expandCommand(command []string) ([]string, error) {
+	expanded := make([]string, len(command))
+	for i, arg := range command {
+		value, err := paths.ExpandPathToken(arg)
+		if err != nil {
+			return nil, err
+		}
+		expanded[i] = value
+	}
+	return expanded, nil
+}
+
+func expandEnvValues(env map[string]string) (map[string]string, error) {
+	expanded := make(map[string]string, len(env))
+	for key, value := range env {
+		next, err := paths.ExpandPathToken(value)
+		if err != nil {
+			return nil, err
+		}
+		expanded[key] = next
+	}
+	return expanded, nil
 }
 
 func execute(ctx context.Context, command []string, cwd string, env []string, stdout, stderr io.Writer) (int, error) {
