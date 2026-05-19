@@ -115,6 +115,21 @@ Copy from `templates/` when creating new jobs:
 
 After copying a template, update `id`, `name`, paths, commands, schedule, and timeout before validation.
 
+## Examples
+
+Use `examples/github-issues-ops/` for a complete agent automation that checks a
+GitHub repository for open issues and asks a coding agent to triage them into an
+ops registry at `~/projects/ops`. The ops registry project is
+https://github.com/callumalpass/ops.
+
+To install that example:
+
+1. Copy `examples/github-issues-ops/job.yaml` to the user's Tickle jobs directory as `github-issues-ops.yaml`.
+2. Copy `examples/github-issues-ops/scripts/*`, `prompt.md`, and `memory.md` to `@config/scripts/github-issues-ops/`.
+3. Edit `GITHUB_REPOSITORY` and, if needed, `TICKLE_AGENT_COMMAND`.
+4. Change `status` from `disabled` to `active`.
+5. Run `tickle validate github-issues-ops` and `tickle check github-issues-ops`.
+
 ## Service Commands
 
 Use:

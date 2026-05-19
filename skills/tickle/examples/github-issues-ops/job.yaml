@@ -1,0 +1,24 @@
+version: 1
+id: github-issues-ops
+name: GitHub Issues Ops Triage
+status: disabled
+
+triggers:
+  - type: script
+    every: 30m
+    command: ["@config/scripts/github-issues-ops/has-github-issues.sh"]
+    timeout: 45s
+
+run:
+  cwd: "@config/scripts/github-issues-ops"
+  command: ["@config/scripts/github-issues-ops/run-agent-triage.sh"]
+  timeout: 2h
+
+env:
+  GITHUB_REPOSITORY: "owner/repo"
+  GITHUB_ISSUE_LIMIT: "50"
+  OPS_GITHUB_URL: "https://github.com/callumalpass/ops"
+  TRIAGE_PROMPT: "@config/scripts/github-issues-ops/prompt.md"
+  TRIAGE_MEMORY: "@config/scripts/github-issues-ops/memory.md"
+  # Optional. If unset, run-agent-triage.sh tries common local agent CLIs.
+  # TICKLE_AGENT_COMMAND: "your-agent --prompt-file \"$TICKLE_EFFECTIVE_PROMPT\""
