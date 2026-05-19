@@ -1,0 +1,15 @@
+version: 1
+id: my-script-gated-job
+name: My Script Gated Job
+status: active
+
+triggers:
+  - type: script
+    schedule: "*/15 * * * *"
+    command: ["./checks/should-run.sh"]
+    timeout: 30s
+
+run:
+  cwd: /path/to/project
+  command: ["./run-job.sh"]
+  timeout: 30m

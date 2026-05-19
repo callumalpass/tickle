@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+BIN="$SCRIPT_DIR/bin/tickle"
+
+if [ -x "$BIN" ]; then
+  exec "$BIN" "$@"
+fi
+
+if command -v tickle >/dev/null 2>&1; then
+  exec tickle "$@"
+fi
+
+printf '%s\n' "tickle binary not found. Install a platform-specific skill bundle or put tickle on PATH." >&2
+exit 127

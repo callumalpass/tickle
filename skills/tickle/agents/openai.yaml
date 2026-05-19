@@ -1,0 +1,7 @@
+interface:
+  display_name: "Tickle"
+  short_description: "Create and maintain Tickle jobs"
+  default_prompt: "Use $tickle to create and validate a local scheduled job."
+
+policy:
+  allow_implicit_invocation: true

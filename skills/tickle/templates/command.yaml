@@ -1,0 +1,13 @@
+version: 1
+id: my-command-job
+name: My Command Job
+status: active
+
+trigger:
+  type: cron
+  schedule: "0 9 * * *"
+
+run:
+  cwd: /path/to/project
+  command: ["sh", "-c", "echo hello from tickle"]
+  timeout: 10m

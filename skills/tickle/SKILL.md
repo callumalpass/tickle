@@ -1,0 +1,102 @@
+---
+name: tickle
+description: Use when creating, validating, installing, running, or maintaining Tickle YAML jobs and the local Tickle daemon. Tickle runs command jobs from YAML, including cron, interval, manual, and script-gated triggers, with JSONL run history and agent-friendly prompt/memory conventions.
+---
+
+# Tickle
+
+Use Tickle for local command automations that should be easy for agents and humans to inspect. Tickle jobs are YAML files, and run history is append-only JSONL plus per-run artifacts.
+
+## Locate the CLI
+
+Prefer the bundled skill wrapper when this skill is installed:
+
+```bash
+~/.codex/skills/tickle/scripts/tickle
+```
+
+If that path is not present, use `tickle` from `PATH`, or build it from the repo:
+
+```bash
+go build -o tickle ./cmd/tickle
+```
+
+## Basic Workflow
+
+1. Create or edit a job YAML file under the user's Tickle jobs directory.
+2. Run `tickle validate <job-file-or-id>`.
+3. For script-gated jobs, run `tickle check <job-file-or-id>`.
+4. Run `tickle run <job-file-or-id>` for a manual smoke test when safe.
+5. Use `tickle service install` and `tickle service start` when the user wants a background daemon.
+6. Inspect `tickle status` and `tickle logs <job-id>` after setup or failures.
+
+Default job directories:
+
+- Linux: `~/.config/tickle/jobs/*.yaml`
+- macOS: `~/Library/Application Support/tickle/jobs/*.yaml`
+- Windows: `%APPDATA%\Tickle\jobs\*.yaml`
+
+Default data directories:
+
+- Linux: `~/.local/share/tickle`
+- macOS: `~/Library/Application Support/tickle`
+- Windows: `%LOCALAPPDATA%\Tickle`
+
+`TICKLE_CONFIG_HOME` and `TICKLE_DATA_HOME` override these locations.
+
+## Job Patterns
+
+Use array commands by default. Avoid shell strings unless shell features are required.
+
+```yaml
+run:
+  command: ["codex", "exec", "--prompt-file", "./prompt.md"]
+```
+
+Use `script` triggers when a condition should be checked on a schedule before running the job:
+
+```yaml
+triggers:
+  - type: script
+    schedule: "*/15 * * * *"
+    command: ["./checks/should-run.sh"]
+    timeout: 30s
+```
+
+Script trigger contract:
+
+- exit `0`: run the job.
+- exit `1`: skip the job.
+- any other exit code: check failed.
+- optional JSON stdout can include `run`, `reason`, `event_id`, and `payload`.
+
+Example JSON stdout:
+
+```json
+{"run":true,"reason":"new work found","event_id":"github:repo:issue-123","payload":{"issue":123}}
+```
+
+The job command receives `TICKLE_TRIGGER_FILE`, pointing to the saved trigger payload for the run.
+
+## Templates
+
+Copy from `templates/` when creating new jobs:
+
+- `command.yaml`: ordinary scheduled command job.
+- `script-gated.yaml`: check script controls whether the job runs.
+- `codex-agent.yaml`: Codex job using prompt and memory files.
+
+After copying a template, update `id`, `name`, paths, commands, schedule, and timeout before validation.
+
+## Service Commands
+
+Use:
+
+```bash
+tickle service install
+tickle service start
+tickle service status
+tickle service logs
+```
+
+`service install` copies the current binary to a stable per-user runtime path before registering the native user-level background runner.

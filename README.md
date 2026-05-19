@@ -32,6 +32,24 @@ Run data is written as JSON and JSONL under the platform data directory:
 
 You can override these paths with `TICKLE_CONFIG_HOME` and `TICKLE_DATA_HOME`.
 
+## Skill
+
+The repo includes a Codex skill at `skills/tickle`. The skill teaches agents how
+to create, validate, install, run, and inspect Tickle jobs.
+
+Release builds publish platform-specific skill zips:
+
+```text
+tickle-skill-linux-amd64.zip
+tickle-skill-linux-arm64.zip
+tickle-skill-darwin-amd64.zip
+tickle-skill-darwin-arm64.zip
+tickle-skill-windows-amd64.zip
+```
+
+Each zip contains a `tickle/` skill folder with `SKILL.md`, templates, wrapper
+scripts, and the matching platform binary under `scripts/bin/`.
+
 ## Job Format
 
 ```yaml
@@ -124,3 +142,16 @@ Mutable state lives in:
 ```text
 <data>/state/<job-id>.json
 ```
+
+## Release Builds
+
+Build all standalone binaries and skill zips locally:
+
+```bash
+scripts/build-release.sh
+```
+
+Artifacts are written to `dist/`, including `SHA256SUMS`.
+
+GitHub Actions runs tests on pushes and pull requests. Pushing a tag like
+`v0.1.0` builds the release artifacts and attaches them to a GitHub Release.
