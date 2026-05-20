@@ -142,3 +142,7 @@ tickle service logs
 ```
 
 `service install` copies the current binary to a stable per-user runtime path before registering the native user-level background runner.
+
+The running daemon hot-reloads valid changes to job YAML files in the jobs
+directory. If a job file is invalid, the daemon logs the reload error and keeps
+the last good schedule.

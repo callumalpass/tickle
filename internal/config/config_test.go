@@ -69,6 +69,24 @@ run:
 	}
 }
 
+func TestLoadJobsRejectsDuplicateIDs(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "one.yaml"), `version: 1
+id: demo
+run:
+  command: ["echo", "one"]
+`)
+	writeFile(t, filepath.Join(dir, "two.yaml"), `version: 1
+id: demo
+run:
+  command: ["echo", "two"]
+`)
+
+	if _, err := LoadJobs(dir); err == nil {
+		t.Fatal("expected duplicate job id error")
+	}
+}
+
 func TestTokenCWDIsNotResolvedRelativeToJobFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "job.yaml")

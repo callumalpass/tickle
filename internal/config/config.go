@@ -90,11 +90,16 @@ func LoadJobs(dir string) ([]*Job, error) {
 	slices.Sort(files)
 
 	jobs := make([]*Job, 0, len(files))
+	seen := map[string]string{}
 	for _, file := range files {
 		job, err := LoadJob(file)
 		if err != nil {
 			return nil, err
 		}
+		if previous, ok := seen[job.ID]; ok {
+			return nil, fmt.Errorf("duplicate job id %q in %s and %s", job.ID, previous, job.Path)
+		}
+		seen[job.ID] = job.Path
 		jobs = append(jobs, job)
 	}
 	return jobs, nil

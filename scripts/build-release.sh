@@ -35,7 +35,7 @@ build_binary() {
 
   echo "building $output"
   CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
-    go build -trimpath -ldflags "-s -w" -o "$output" ./cmd/tickle
+    go build -trimpath -ldflags "-s -w -X github.com/callumalpass/tickle/internal/version.Version=$VERSION" -o "$output" ./cmd/tickle
 }
 
 write_manifest() {

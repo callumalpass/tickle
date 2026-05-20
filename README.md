@@ -8,7 +8,41 @@ check scripts. It can run ordinary shell commands, maintenance tasks, or agent
 workflows that use prompt files, memory files, structured trigger payloads, and
 a run journal that is easy to inspect with normal shell tools.
 
-## Quick Start
+## Install
+
+Tickle is intended to be skill/agent-first. The easiest path is usually to ask
+your coding agent to install it from this repository, rather than installing Go
+and building it yourself.
+
+Example agent prompt:
+
+```text
+Install Tickle from https://github.com/callumalpass/tickle.
+Use the repo's skills/tickle skill, install the matching Tickle binary, run
+tickle init, and install/start the user service.
+```
+
+The repo includes a coding-agent skill at `skills/tickle`. The skill teaches
+agents how to install Tickle, create jobs, validate them, run checks, inspect
+history, and manage the daemon.
+
+Release builds publish platform-specific skill zips:
+
+```text
+tickle-skill-linux-amd64.zip
+tickle-skill-linux-arm64.zip
+tickle-skill-darwin-amd64.zip
+tickle-skill-darwin-arm64.zip
+tickle-skill-windows-amd64.zip
+```
+
+Each zip contains a `tickle/` skill folder with `SKILL.md`, templates, wrapper
+scripts, and the matching platform binary under `scripts/bin/`.
+
+## Manual Source Build
+
+You only need Go if you want to build Tickle from source. Install Go 1.24 or
+newer from <https://go.dev/doc/install>, then run:
 
 ```bash
 go build -o tickle ./cmd/tickle
@@ -17,6 +51,22 @@ go build -o tickle ./cmd/tickle
 ./tickle run example
 ./tickle daemon
 ```
+
+For a persistent user-level daemon, use:
+
+```bash
+./tickle service install
+./tickle service start
+./tickle service status
+```
+
+Check whether a newer Tickle release is available:
+
+```bash
+./tickle update --check
+```
+
+This only checks for updates; it does not replace the installed binary.
 
 By default, Tickle reads jobs from:
 
@@ -55,24 +105,6 @@ process.
 
 Repo-local scripts still work when the automation belongs to a project and the
 scripts should be committed with that project.
-
-## Skill
-
-The repo includes a coding-agent skill at `skills/tickle`. The skill teaches
-agents how to create, validate, install, run, and inspect Tickle jobs.
-
-Release builds publish platform-specific skill zips:
-
-```text
-tickle-skill-linux-amd64.zip
-tickle-skill-linux-arm64.zip
-tickle-skill-darwin-amd64.zip
-tickle-skill-darwin-arm64.zip
-tickle-skill-windows-amd64.zip
-```
-
-Each zip contains a `tickle/` skill folder with `SKILL.md`, templates, wrapper
-scripts, and the matching platform binary under `scripts/bin/`.
 
 ## Job Format
 
@@ -133,6 +165,7 @@ tickle service install
 tickle service start
 tickle service status
 tickle service logs
+tickle update --check
 ```
 
 `tickle daemon` runs in the foreground. `tickle service install` copies the
@@ -142,6 +175,10 @@ user-level service mechanism:
 - Linux: `systemd --user`
 - macOS: `launchd` LaunchAgent
 - Windows: Task Scheduler logon task
+
+While the daemon is running, it polls the jobs directory and hot-reloads valid
+changes to `*.yaml` and `*.yml` job files. Invalid edits are logged and the last
+good schedule keeps running.
 
 ## History
 

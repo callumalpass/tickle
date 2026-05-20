@@ -14,6 +14,8 @@ import (
 	"github.com/callumalpass/tickle/internal/runner"
 	"github.com/callumalpass/tickle/internal/scheduler"
 	"github.com/callumalpass/tickle/internal/service"
+	updatecheck "github.com/callumalpass/tickle/internal/update"
+	"github.com/callumalpass/tickle/internal/version"
 )
 
 type exitError struct {
@@ -69,6 +71,8 @@ func run(args []string) error {
 		return cmdLogs(args[1:])
 	case "service":
 		return cmdService(args[1:])
+	case "update":
+		return cmdUpdate(args[1:])
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
 	}
@@ -87,6 +91,7 @@ Usage:
   tickle status
   tickle logs [job-file-or-id]
   tickle service <install|start|stop|restart|status|logs|uninstall>
+  tickle update --check
 
 Environment:
   TICKLE_CONFIG_HOME  override config directory
@@ -328,6 +333,53 @@ func cmdService(args []string) error {
 		fmt.Print(out)
 	}
 	return err
+}
+
+func cmdUpdate(args []string) error {
+	if len(args) != 1 || (args[0] != "--check" && args[0] != "check") {
+		return errors.New("usage: tickle update --check")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	result, err := updatecheck.Check(ctx, updatecheck.Options{
+		CurrentVersion: version.Version,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println("current:", result.CurrentVersion)
+	if result.LatestTag != "" {
+		fmt.Println("latest:", result.LatestTag)
+	} else {
+		fmt.Println("latest:", result.LatestVersion)
+	}
+	if result.CurrentComparable {
+		if result.UpdateAvailable {
+			fmt.Println("status: update available")
+		} else {
+			fmt.Println("status: up to date")
+		}
+	} else {
+		fmt.Println("status: latest release found; current version is not comparable")
+	}
+	fmt.Println("platform:", result.Platform)
+	if result.BinaryAsset != nil {
+		fmt.Println("binary:", result.BinaryAsset.Name)
+		fmt.Println("binary_url:", result.BinaryAsset.URL)
+	} else {
+		fmt.Println("binary: no matching platform asset found")
+	}
+	if result.SkillAsset != nil {
+		fmt.Println("skill:", result.SkillAsset.Name)
+		fmt.Println("skill_url:", result.SkillAsset.URL)
+	} else {
+		fmt.Println("skill: no matching platform skill asset found")
+	}
+	if result.ReleaseURL != "" {
+		fmt.Println("release:", result.ReleaseURL)
+	}
+	return nil
 }
 
 func loadDefaultJobs() ([]*config.Job, error) {
